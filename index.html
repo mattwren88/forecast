@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forecast</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <div class="location" id="location">
+        <span class="location-icon">&#9906;</span>
+        <span id="location-name">Loading location&hellip;</span>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" title="Refresh">&#8635;</button>
+    </header>
+
+    <section class="card" id="current-card">
+      <div class="card-loading" id="current-loading">
+        <div class="spinner"></div>
+        <span>Fetching current conditions&hellip;</span>
+      </div>
+      <div class="current-weather hidden" id="current-weather"></div>
+    </section>
+
+    <section class="card" id="hourly-card">
+      <div class="card-header">
+        <h2>Next 24 Hours</h2>
+      </div>
+      <div class="card-loading" id="hourly-loading">
+        <div class="spinner"></div>
+        <span>Fetching hourly forecast&hellip;</span>
+      </div>
+      <div class="hourly-chart hidden" id="hourly-chart"></div>
+    </section>
+
+    <section class="card" id="forecast-card">
+      <div class="card-header">
+        <h2>7-Day Forecast</h2>
+        <button class="toggle-btn" id="chart-toggle" title="Toggle orientation">
+          <span id="toggle-icon">&#8597;</span>
+        </button>
+      </div>
+      <div class="card-loading" id="forecast-loading">
+        <div class="spinner"></div>
+        <span>Fetching forecast&hellip;</span>
+      </div>
+      <div class="pill-chart hidden" id="pill-chart"></div>
+    </section>
+
+    <section class="card" id="radar-card">
+      <div class="card-header">
+        <h2>Radar</h2>
+      </div>
+      <div id="radar-map"></div>
+    </section>
+
+    <section class="card hidden" id="alerts-card">
+      <div class="card-header alerts-header">
+        <h2>&#9888; Alerts</h2>
+      </div>
+      <div id="alerts-content"></div>
+    </section>
+
+    <footer class="app-footer">
+      <span id="last-updated"></span>
+      <span>Data from <a href="https://www.weather.gov" target="_blank" rel="noopener">NOAA</a></span>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
