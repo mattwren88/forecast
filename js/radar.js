@@ -30,6 +30,7 @@ export function initRadar(lat, lon) {
 async function loadRadarOverlay() {
   try {
     const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    if (!res.ok) return;
     const data = await res.json();
     const latestRadar = data.radar?.past?.slice(-1)[0];
     if (latestRadar) {

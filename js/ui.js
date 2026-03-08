@@ -1,5 +1,6 @@
 import { getWeatherIcon } from './icons.js';
 import { getSunTimes, formatSunTime, getDayProgress } from './sun.js';
+import { el, insertSvg } from './dom.js';
 
 function cToF(c) {
   if (c == null) return null;
@@ -33,13 +34,6 @@ function windDirection(deg) {
   return dirs[Math.round(deg / 22.5) % 16];
 }
 
-function el(tag, className, text) {
-  const e = document.createElement(tag);
-  if (className) e.className = className;
-  if (text != null) e.textContent = text;
-  return e;
-}
-
 function detailItem(label, value) {
   const item = el('div', 'detail-item');
   item.appendChild(el('span', 'detail-label', label));
@@ -70,9 +64,24 @@ export function renderCurrentWeather(observation, forecast, container, lat, lon)
   const pressure = observation.barometricPressure?.value;
   const visibility = observation.visibility?.value;
 
-  // Determine if daytime
-  const hour = new Date().getHours();
-  const isDaytime = hour >= 6 && hour < 20;
+  // Determine isDaytime from sunrise/sunset if available, else fallback to clock
+  let isDaytime;
+  let sun = null;
+  if (lat != null && lon != null) {
+    sun = getSunTimes(lat, lon);
+    if (sun.sunrise && sun.sunset) {
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const riseMin = sun.sunrise.hours * 60 + sun.sunrise.minutes;
+      const setMin = sun.sunset.hours * 60 + sun.sunset.minutes;
+      isDaytime = nowMin >= riseMin && nowMin < setMin;
+    } else {
+      isDaytime = sun.polar !== 'night';
+    }
+  } else {
+    const hour = new Date().getHours();
+    isDaytime = hour >= 6 && hour < 20;
+  }
 
   let high = '\u2014', low = '\u2014';
   if (forecast && forecast.length >= 2) {
@@ -84,9 +93,9 @@ export function renderCurrentWeather(observation, forecast, container, lat, lon)
 
   const main = el('div', 'current-main');
 
-  // Custom SVG icon
+  // Custom SVG icon (using safe insertSvg)
   const iconWrap = el('div', 'current-icon');
-  iconWrap.innerHTML = getWeatherIcon(condition, isDaytime, 56);
+  insertSvg(iconWrap, getWeatherIcon(condition, isDaytime, 56));
   main.appendChild(iconWrap);
 
   main.appendChild(el('div', 'current-temp', formatTemp(temp, tempUnit)));
@@ -109,8 +118,7 @@ export function renderCurrentWeather(observation, forecast, container, lat, lon)
   details.appendChild(detailItem('Visibility', metersToMiles(visibility)));
 
   // Sunrise/sunset
-  if (lat != null && lon != null) {
-    const sun = getSunTimes(lat, lon);
+  if (sun) {
     details.appendChild(detailItem('Sunrise', formatSunTime(sun.sunrise)));
     details.appendChild(detailItem('Sunset', formatSunTime(sun.sunset)));
 
@@ -133,7 +141,6 @@ function buildSunArc(progress, isDaytime) {
   svg.setAttribute('viewBox', '0 0 100 50');
   svg.setAttribute('class', 'sun-arc-svg');
 
-  // Arc path (semicircle)
   const arcPath = document.createElementNS(ns, 'path');
   arcPath.setAttribute('d', 'M 10 45 Q 50 -10 90 45');
   arcPath.setAttribute('fill', 'none');
@@ -143,7 +150,6 @@ function buildSunArc(progress, isDaytime) {
   arcPath.setAttribute('opacity', '0.4');
   svg.appendChild(arcPath);
 
-  // Horizon line
   const horizon = document.createElementNS(ns, 'line');
   horizon.setAttribute('x1', '5');
   horizon.setAttribute('y1', '45');
@@ -153,8 +159,6 @@ function buildSunArc(progress, isDaytime) {
   horizon.setAttribute('stroke-width', '0.8');
   svg.appendChild(horizon);
 
-  // Sun dot along the arc
-  // Parametric: t goes 0 to 1 along the quadratic bezier M10,45 Q50,-10 90,45
   const t = Math.max(0, Math.min(1, progress));
   const x = (1 - t) * (1 - t) * 10 + 2 * (1 - t) * t * 50 + t * t * 90;
   const y = (1 - t) * (1 - t) * 45 + 2 * (1 - t) * t * (-10) + t * t * 45;

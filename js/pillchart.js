@@ -1,4 +1,5 @@
 import { getWeatherIcon, getRaindropIcon } from './icons.js';
+import { el, insertSvg } from './dom.js';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -52,22 +53,6 @@ function tempColor(temp, min, max) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function el(tag, className, text) {
-  const e = document.createElement(tag);
-  if (className) e.className = className;
-  if (text != null) e.textContent = text;
-  return e;
-}
-
-// Safe SVG insertion: parse trusted SVG string via DOMParser
-function insertSvg(container, svgString) {
-  const doc = new DOMParser().parseFromString(svgString, 'image/svg+xml');
-  const svg = doc.documentElement;
-  if (svg.nodeName === 'svg') {
-    container.appendChild(document.importNode(svg, true));
-  }
-}
-
 export function renderPillChart(periods, container, mode = 'horizontal') {
   const days = parseForecastDays(periods);
   container.replaceChildren();
@@ -100,7 +85,6 @@ function renderHorizontal(days, container, weekMin, weekMax, range) {
 
     const row = el('div', `pill-row${day.isToday ? ' today' : ''}`);
 
-    // Weather icon
     const iconWrap = el('span', 'pill-icon');
     insertSvg(iconWrap, getWeatherIcon(day.forecast, day.isDaytime, 20));
     row.appendChild(iconWrap);
@@ -118,7 +102,6 @@ function renderHorizontal(days, container, weekMin, weekMax, range) {
 
     row.appendChild(el('span', 'pill-high', `${high}\u00B0`));
 
-    // Precip probability
     if (day.precip > 0) {
       const precipWrap = el('span', 'pill-precip');
       insertSvg(precipWrap, getRaindropIcon(12));
@@ -157,14 +140,12 @@ function renderVertical(days, container, weekMin, weekMax, range) {
 
     col.appendChild(el('span', 'pill-col-low', `${low}\u00B0`));
 
-    // Icon below temp
     const iconWrap = el('span', 'pill-col-icon');
     insertSvg(iconWrap, getWeatherIcon(day.forecast, day.isDaytime, 18));
     col.appendChild(iconWrap);
 
     col.appendChild(el('span', 'pill-col-label', day.name));
 
-    // Precip below label
     if (day.precip > 0) {
       const precipWrap = el('span', 'pill-col-precip');
       insertSvg(precipWrap, getRaindropIcon(10));

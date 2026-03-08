@@ -1,16 +1,6 @@
-import { getWeatherIcon } from './icons.js';
-
-function el(tag, className, text) {
-  const e = document.createElement(tag);
-  if (className) e.className = className;
-  if (text != null) e.textContent = text;
-  return e;
-}
-
 export function renderHourlyChart(periods, container) {
   container.replaceChildren();
 
-  // Take next 24 hours, sample every 1 hour but only label every 3
   const hours = periods.slice(0, 24);
   if (hours.length < 2) return;
 
@@ -31,10 +21,9 @@ export function renderHourlyChart(periods, container) {
   const points = hours.map((p, i) => {
     const x = padLeft + (i / (hours.length - 1)) * chartW;
     const y = padTop + (1 - (p.temperature - minT) / range) * chartH;
-    return { x, y, temp: p.temperature, time: p.startTime, precip: p.probabilityOfPrecipitation?.value || 0, forecast: p.shortForecast, isDaytime: p.isDaytime };
+    return { x, y, temp: p.temperature, time: p.startTime, precip: p.probabilityOfPrecipitation?.value || 0 };
   });
 
-  // Build SVG
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
@@ -86,7 +75,6 @@ export function renderHourlyChart(periods, container) {
     const hour = date.getHours();
     const label = i === 0 ? 'Now' : `${hour % 12 || 12}${hour < 12 ? 'a' : 'p'}`;
 
-    // Temp label above point
     const tempText = document.createElementNS(ns, 'text');
     tempText.setAttribute('x', p.x.toFixed(1));
     tempText.setAttribute('y', (p.y - 6).toFixed(1));
@@ -95,7 +83,6 @@ export function renderHourlyChart(periods, container) {
     tempText.textContent = `${p.temp}\u00B0`;
     svg.appendChild(tempText);
 
-    // Dot
     const dot = document.createElementNS(ns, 'circle');
     dot.setAttribute('cx', p.x.toFixed(1));
     dot.setAttribute('cy', p.y.toFixed(1));
@@ -105,7 +92,6 @@ export function renderHourlyChart(periods, container) {
     dot.setAttribute('stroke-width', '1.5');
     svg.appendChild(dot);
 
-    // Time label below
     const timeText = document.createElementNS(ns, 'text');
     timeText.setAttribute('x', p.x.toFixed(1));
     timeText.setAttribute('y', (padTop + chartH + 14).toFixed(1));
@@ -114,7 +100,6 @@ export function renderHourlyChart(periods, container) {
     timeText.textContent = label;
     svg.appendChild(timeText);
 
-    // Precip indicator
     if (p.precip > 0) {
       const precipText = document.createElementNS(ns, 'text');
       precipText.setAttribute('x', p.x.toFixed(1));
